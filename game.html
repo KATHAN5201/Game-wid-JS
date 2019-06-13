@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+
+<!-- /**************To center the rectangle in canvas*************************
+				canvasContext.fillRect(X=half of canvas width-half of rectangles width,Y="half of canvas height-half of rectanles height,width of rectangle,height of rectangle")
+
+				******************************************************************************/ -->
+
+
+				<html lang="en">
+				<head>
+					<meta charset="UTF-8">
+					<title>Tennis Game</title>
+				</head>
+				<body>
+					<canvas id="gameCanvas" width="800px" height="600"></canvas>   <!-- Main Canvas -->
+
+
+
+					<script>
+
+						var canvas;                                //variable for canvas
+						var canvasContext;						 //variable for handling content on our canvas
+						var ballX=0;							//horizontal distance which chnages with time
+						var ballY=10;							//vertial distance which chnages with time
+						var ballSpeedY=4;							//initial position of the ball
+						var ballSpeedX=14;					//how many pixels it moves in one interval
+						var paddle1Y=200;
+						var paddle2Y=200;					//distance of paddle from top
+						const paddleWidth=10;					
+						const paddleHeight=100;
+						const winScore=3;
+						var player1Score=0;
+						var player2Score=0;
+						var winScreen=false;
+
+						function handleMouseClick(evt){
+							if(winScreen){
+								player1Score=0;
+								player2Score=0;
+								winScreen=false;
+							}
+
+						}
+
+
+						//Below function runs after all code has been executed outside it.
+						window.onload = function(){
+							console.log("Game Running!");  //This lines writes "Game Running!" on console
+							canvas=document.getElementById('gameCanvas');//This lines catches the canvas element from html body
+							canvasContext=canvas.getContext('2d');      /*HTML5 context object to enable draw methods*/
+							var fps=25;
+							setInterval(function(){
+								moveobjects();					//setInterval(function,after how many millisecond it should be run again)
+								drawObjects();
+
+							}
+							,1000/fps);
+
+							//below sets paddle position to the  mouse position
+							canvas.addEventListener('mousemove',function(evt){
+
+
+							var mousePos=getMousepos(evt);
+							paddle1Y=mousePos.y - paddleHeight/2;	
+							})
+
+							//Below function handles winscreen
+							canvas.addEventListener("mousedown",handleMouseClick);
+
+
+						}
+
+						//Below function handles computer movenment
+						function computerMovement(){
+							var paddleCenter=paddle2Y + paddleHeight/2;
+							if(paddleCenter<ballY-40){
+								paddle2Y+=8;
+							}
+							else if(paddleCenter>ballY+40){
+								paddle2Y-=8;
+							}
+						}
+
+
+
+
+						//Below function handles movement of objects	
+						function moveobjects(){
+							if(winScreen){
+								return;
+							}
+							ballX+=ballSpeedX;
+							ballY+=ballSpeedY;
+							computerMovement();
+							if(ballX>canvas.width){
+								if(ballY>paddle2Y && ballY<paddle2Y + paddleHeight){
+									ballSpeedX = -ballSpeedX;
+									var deltaY=ballY - (paddle2Y+paddleHeight/2);
+									ballSpeedY=deltaY*0.3;
+								}
+								else{
+									player1Score++;//This must be before ballreset since we need to check result.
+									ballReset();
+									
+								}
+
+							}
+							if(ballX<0){
+								if(ballY>paddle1Y && ballY<paddle1Y+paddleHeight){
+									ballSpeedX = - ballSpeedX;
+									var deltaY=ballY-(paddle1Y+paddleHeight/2);
+									ballSpeedY=deltaY*0.35;
+								}
+								else{
+									player2Score++; //This must be before since ballreset checks win conditon
+									ballReset();
+								
+								}
+							}
+
+							if(ballY<0){
+								ballSpeedY = -ballSpeedY;
+							}
+							if(ballY>canvas.height){
+								ballSpeedY = - ballSpeedY;
+							}
+						}
+						//Below function draws net
+						function drawNet(){
+							
+							for(var i=0;i<canvas.height;i+=40){
+								makeRect((canvas.width/2)-1,i,2,20,'red');
+
+							}
+						}
+
+
+						//Below function draws required objects
+						function drawObjects(){
+
+							makeRect(0,0,canvas.width,canvas.height,'black');//main board
+							if(winScreen){
+								canvasContext.fillStyle="white";
+								if(player1Score>=winScore){
+									canvasContext.fillText("Player 1 You Won!",250,150);
+								}
+								else if(player2Score>=winScore){
+									canvasContext.fillText("Computer Won",250,150);
+								}
+								canvasContext.fillText("click to continue..",300,500);
+							
+								return;
+							}
+							drawNet();
+							makeCircle(ballX,ballY,10,'#8DCA64');									 //moving ball	
+							makeRect(0,paddle1Y,paddleWidth,paddleHeight,'white');//This is left paddle
+							makeRect(canvas.width-paddleWidth,paddle2Y,paddleWidth,paddleHeight,"white"); //This is right paddle
+							canvasContext.fillText(player1Score,150,150);//player1 score
+							canvasContext.fillText(player2Score,canvas.width-150,150); //player2 score
+
+					
+						}
+
+						//Below function draws Rectangle
+						function makeRect(leftX,topY,width,height,fillColor){
+
+							canvasContext.fillStyle=fillColor;
+							canvasContext.fillRect(leftX,topY,width,height);
+
+						}
+						//Below funtion draws Circle
+						function makeCircle(hCenter,vCenter,radius,fillColor){
+							canvasContext.fillStyle=fillColor;
+							canvasContext.beginPath();
+							canvasContext.arc(hCenter,vCenter,radius,0,Math.PI*2);
+							canvasContext.fill();
+						}
+						//below function calculates required mouse position
+
+						function getMousepos(evt){
+							var rect=canvas.getBoundingClientRect();
+							var root=document.documentElement
+							var mouseX=evt.clientX - rect.left - root.scrollLeft;
+							var mouseY=evt.clientY - rect.top - root.scrollTop;
+							return{
+								x:mouseX,
+								y:mouseY
+							};
+						}
+						//Below function resets the ball
+						function ballReset(){
+							if(player2Score>=winScore || player1Score>=winScore){
+								
+								winScreen=true;
+							}
+							ballX=canvas.width/2;
+							ballY=canvas.height/2;
+							ballSpeedX= - ballSpeedX;
+						}
+
+
+
+
+					</script>
+
+				</body>
+				</html>
